@@ -1,0 +1,9 @@
+### Buscar registros por logradouro_nome
+GET http://localhost:8000/api/busca-logradouro/?logradouro_nome=R MARIANTE
+Accept: application/json
+
+###
+
+### Buscar registros por data de implantação
+GET http://localhost:8000/api/busca-implantacao/?implantacao=2018-06-21
+Accept: application/json
