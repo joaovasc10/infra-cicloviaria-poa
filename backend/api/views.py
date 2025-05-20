@@ -45,8 +45,21 @@ class BuscaPorLogradouro(APIView):
         logradouro = logradouro.strip().upper()
         index = BPlusTree(index_file=os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_logradouro.idx'))
         offsets = index.search(logradouro)
-        results = read_records_by_offsets(offsets)
-        return Response(results)
+        
+        # Paginação
+        page = int(request.GET.get('page', 1))
+        pagesize = int(request.GET.get('pagesize', 10))
+        start = (page - 1) * pagesize
+        end = start + pagesize
+        paged_offsets = offsets[start:end]
+
+        results = read_records_by_offsets(paged_offsets)
+        return Response({
+            'page': page,
+            'pagesize': pagesize,
+            'total': len(offsets),
+            'results': results
+        })
 
 class BuscaPorImplantacao(APIView):
     """
@@ -60,5 +73,18 @@ class BuscaPorImplantacao(APIView):
         implantacao = implantacao.strip()
         index = BPlusTree(index_file=os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_implantacao.idx'))
         offsets = index.search(implantacao)
-        results = read_records_by_offsets(offsets)
-        return Response(results)
+        
+        # Paginação
+        page = int(request.GET.get('page', 1))
+        pagesize = int(request.GET.get('pagesize', 10))
+        start = (page - 1) * pagesize
+        end = start + pagesize
+        paged_offsets = offsets[start:end]
+
+        results = read_records_by_offsets(paged_offsets)
+        return Response({
+            'page': page,
+            'pagesize': pagesize,
+            'total': len(offsets),
+            'results': results
+        })
