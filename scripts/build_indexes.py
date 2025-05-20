@@ -36,7 +36,7 @@ with open('data/bin/infra_cicloviaria.bin', 'rb') as binfile:
         unpacked = record_struct.unpack(bytes_read)
         # Extrai os campos (removendo espaços extras e decodificando)
         implantacao = unpacked[4].decode('utf-8').strip()
-        logradouro_nome = unpacked[5].decode('utf-8').strip()
+        logradouro_nome = unpacked[5].decode('utf-8').strip().upper()
         # Adiciona ao índice
         index_logradouro.add(logradouro_nome, offset)
         index_implantacao.add(implantacao, offset)
