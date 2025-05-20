@@ -1,7 +1,7 @@
 import os
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .btree import BTreeIndex
+from .btree import BPlusTree
 import struct
 from django.conf import settings
 
@@ -43,8 +43,8 @@ class BuscaPorLogradouro(APIView):
         if not logradouro:
             return Response({'error': 'Parâmetro logradouro_nome é obrigatório.'}, status=400)
         logradouro = logradouro.strip().upper()
-        index = BTreeIndex(os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_logradouro.idx'))
-        offsets = index.get(logradouro)
+        index = BPlusTree(index_file=os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_logradouro.idx'))
+        offsets = index.search(logradouro)
         results = read_records_by_offsets(offsets)
         return Response(results)
 
@@ -58,7 +58,7 @@ class BuscaPorImplantacao(APIView):
         if not implantacao:
             return Response({'error': 'Parâmetro implantacao é obrigatório.'}, status=400)
         implantacao = implantacao.strip()
-        index = BTreeIndex(os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_implantacao.idx'))
-        offsets = index.get(implantacao)
+        index = BPlusTree(index_file=os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_implantacao.idx'))
+        offsets = index.search(implantacao)
         results = read_records_by_offsets(offsets)
         return Response(results)
