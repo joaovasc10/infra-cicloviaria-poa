@@ -1,56 +1,129 @@
 import pickle
 import os
-from collections import defaultdict
 
-class BTreeIndex:
+class BPlusTreeNode:
     """
-    Estrutura de índice simples baseada em dicionário para mapear chaves (ex: logradouro_nome ou implantacao)
-    para offsets no arquivo binário. O índice é persistido em disco usando pickle.
+    Nó da árvore B+.
     """
+    def __init__(self, leaf=False):
+        self.leaf = leaf
+        self.keys = []
+        self.children = []
 
-    def __init__(self, index_file):
-        """
-        Inicializa o índice.
-        - index_file: caminho do arquivo onde o índice será salvo/carregado.
-        """
+class BPlusTree:
+    """
+    Implementação básica de uma árvore B+ para indexação de chaves e offsets.
+    """
+    def __init__(self, order=8, index_file=None):
+        self.root = BPlusTreeNode(leaf=True)
+        self.order = order
         self.index_file = index_file
-        # defaultdict(list): cada chave pode ter múltiplos offsets (caso haja mais de um registro com o mesmo valor)
-        self.index = defaultdict(list)
-        # Se o arquivo de índice já existe, carrega o índice do disco
-        if os.path.exists(self.index_file):
+        if index_file and os.path.exists(index_file):
             self.load()
 
-    def add(self, key, offset):
+    def insert(self, key, offset):
         """
-        Adiciona um novo offset para a chave informada.
-        - key: valor do campo indexado (ex: nome da rua ou data de implantação)
-        - offset: posição do registro no arquivo binário
+        Insere uma chave e offset na árvore.
         """
-        self.index[key].append(offset)
+        root = self.root
+        if len(root.keys) == (self.order - 1):
+            new_root = BPlusTreeNode()
+            new_root.children.append(self.root)
+            self._split_child(new_root, 0)
+            self.root = new_root
+        self._insert_non_full(self.root, key, offset)
 
-    def get(self, key):
+    def _insert_non_full(self, node, key, offset):
+        if node.leaf:
+            # Se a chave já existe, adiciona o offset à lista
+            for i, (k, offsets) in enumerate(node.keys):
+                if k == key:
+                    offsets.append(offset)
+                    return
+            # Caso contrário, insere ordenado
+            node.keys.append((key, [offset]))
+            node.keys.sort(key=lambda x: x[0])
+        else:
+            i = len(node.keys) - 1
+            while i >= 0 and key < node.keys[i][0]:
+                i -= 1
+            i += 1
+            child = node.children[i]
+            if len(child.keys) == (self.order - 1):
+                self._split_child(node, i)
+                if key > node.keys[i][0]:
+                    i += 1
+            self._insert_non_full(node.children[i], key, offset)
+
+    def _split_child(self, parent, index):
+        order = self.order
+        node = parent.children[index]
+        new_node = BPlusTreeNode(leaf=node.leaf)
+        mid = order // 2
+
+        if node.leaf:
+            # Divide as chaves e mantém todas as folhas ligadas
+            new_node.keys = node.keys[mid:]
+            node.keys = node.keys[:mid]
+            parent.keys.insert(index, new_node.keys[0])
+            parent.children.insert(index + 1, new_node)
+        else:
+            # Divide as chaves e filhos para nós internos
+            parent.keys.insert(index, node.keys[mid])
+            new_node.keys = node.keys[mid + 1:]
+            node.keys = node.keys[:mid]
+            new_node.children = node.children[mid + 1:]
+            node.children = node.children[:mid + 1]
+            parent.children.insert(index + 1, new_node)
+
+    def search(self, key):
         """
-        Retorna a lista de offsets associados à chave informada.
-        - key: valor do campo indexado
+        Busca offsets associados à chave.
         """
-        return self.index.get(key, [])
+        node = self.root
+        while True:
+            if node.leaf:
+                for k, offsets in node.keys:
+                    if k == key:
+                        return offsets
+                return []
+            else:
+                i = 0
+                while i < len(node.keys) and key > node.keys[i][0]:
+                    i += 1
+                node = node.children[i]
 
     def save(self):
         """
-        Salva o índice no disco usando pickle.
+        Serializa a árvore B+ em disco usando pickle.
         """
-        with open(self.index_file, 'wb') as f:
-            pickle.dump(dict(self.index), f)
+        if self.index_file:
+            with open(self.index_file, 'wb') as f:
+                pickle.dump(self, f)
 
     def load(self):
         """
-        Carrega o índice do disco.
+        Carrega a árvore B+ do disco.
         """
         with open(self.index_file, 'rb') as f:
-            self.index = defaultdict(list, pickle.load(f))
+            tree = pickle.load(f)
+            self.root = tree.root
+            self.order = tree.order
 
     def keys(self):
         """
         Retorna todas as chaves indexadas, ordenadas.
         """
-        return sorted(self.index.keys())
+        result = []
+        node = self.root
+        # Vai até a folha mais à esquerda
+        while not node.leaf:
+            node = node.children[0]
+        # Percorre todas as folhas
+        while node:
+            result.extend([k for k, _ in node.keys])
+            if hasattr(node, 'next'):
+                node = node.next
+            else:
+                break
+        return result
