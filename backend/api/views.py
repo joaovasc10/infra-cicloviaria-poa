@@ -42,7 +42,8 @@ class BuscaPorLogradouro(APIView):
         logradouro = request.GET.get('logradouro_nome')
         if not logradouro:
             return Response({'error': 'Parâmetro logradouro_nome é obrigatório.'}, status=400)
-        index = BTreeIndex('data/bin/infra_cicloviaria_logradouro.idx')
+        logradouro = logradouro.strip().upper()
+        index = BTreeIndex(os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_logradouro.idx'))
         offsets = index.get(logradouro)
         results = read_records_by_offsets(offsets)
         return Response(results)
@@ -56,7 +57,8 @@ class BuscaPorImplantacao(APIView):
         implantacao = request.GET.get('implantacao')
         if not implantacao:
             return Response({'error': 'Parâmetro implantacao é obrigatório.'}, status=400)
-        index = BTreeIndex('data/bin/infra_cicloviaria_implantacao.idx')
+        implantacao = implantacao.strip()
+        index = BTreeIndex(os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_implantacao.idx'))
         offsets = index.get(implantacao)
         results = read_records_by_offsets(offsets)
         return Response(results)
