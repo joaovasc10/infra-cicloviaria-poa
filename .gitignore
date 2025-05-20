@@ -7,3 +7,4 @@ __pycache__/
 .history/
 data/raw/
 backend/db.sqlite3
+data/bin/*.idx
