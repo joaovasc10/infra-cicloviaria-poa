@@ -9,6 +9,7 @@ class BPlusTreeNode:
         self.leaf = leaf
         self.keys = []
         self.children = []
+        self.next = None
 
 class BPlusTree:
     """
@@ -62,13 +63,17 @@ class BPlusTree:
         mid = order // 2
 
         if node.leaf:
-            # Divide as chaves e mantém todas as folhas ligadas
+            # Divide as chaves
             new_node.keys = node.keys[mid:]
             node.keys = node.keys[:mid]
+            # Atualiza ponteiros next para manter folhas encadeadas
+            new_node.next = node.next
+            node.next = new_node
+            # Insere referência no pai
             parent.keys.insert(index, new_node.keys[0])
             parent.children.insert(index + 1, new_node)
         else:
-            # Divide as chaves e filhos para nós internos
+            # Divide chaves e filhos para nós internos
             parent.keys.insert(index, node.keys[mid])
             new_node.keys = node.keys[mid + 1:]
             node.keys = node.keys[:mid]
@@ -80,18 +85,25 @@ class BPlusTree:
         """
         Busca offsets associados à chave.
         """
+        key = key.rstrip('\x00').strip().upper()
         node = self.root
-        while True:
-            if node.leaf:
-                for k, offsets in node.keys:
-                    if k == key:
-                        return offsets
-                return []
-            else:
-                i = 0
-                while i < len(node.keys) and key > node.keys[i][0]:
-                    i += 1
-                node = node.children[i]
+        while not node.leaf:
+            i = 0
+            while i < len(node.keys) and key >= node.keys[i][0]:
+                i += 1
+            node = node.children[i]
+        # varrer esta folha _e todas as folhas à direita_ 
+        results = []
+        while node:
+            for k, offsets in node.keys:
+                # garanta mesmo formato antes de comparar
+                if k.rstrip('\x00').strip().upper() == key:
+                    results.extend(offsets)
+                elif k > key:
+                    # já passou da chave
+                    return results
+            node = node.next
+        return results
 
     def save(self):
         """
