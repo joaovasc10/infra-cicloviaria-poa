@@ -96,13 +96,12 @@ class BPlusTree:
         results = []
         while node:
             for k, offsets in node.keys:
-                # garanta mesmo formato antes de comparar
                 if k.rstrip('\x00').strip().upper() == key:
                     results.extend(offsets)
                 elif k > key:
-                    # já passou da chave
                     return results
-            node = node.next
+            # avança para a próxima folha, se existir
+            node = getattr(node, 'next', None)
         return results
 
     def save(self):
