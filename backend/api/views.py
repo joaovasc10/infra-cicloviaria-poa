@@ -54,6 +54,12 @@ class BuscaPorLogradouro(APIView):
         paged_offsets = offsets[start:end]
 
         results = read_records_by_offsets(paged_offsets)
+
+        for rec in results:
+            for k, v in rec.items():
+                if isinstance(v, str):
+                    rec[k] = v.rstrip('\x00').strip()
+
         return Response({
             'page': page,
             'pagesize': pagesize,
@@ -82,6 +88,11 @@ class BuscaPorImplantacao(APIView):
         paged_offsets = offsets[start:end]
 
         results = read_records_by_offsets(paged_offsets)
+
+        for rec in results:
+            rec.pop('latitude', None)
+            rec.pop('longitude', None)
+
         return Response({
             'page': page,
             'pagesize': pagesize,
