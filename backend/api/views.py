@@ -27,10 +27,14 @@ def read_records_by_offsets(offsets):
         for offset in offsets:
             binfile.seek(offset)
             data = binfile.read(record_size)
-            if len(data) == record_size:
-                unpacked = record_struct.unpack(data)
-                record = {field: unpacked[i].decode('utf-8').strip() for i, (field, _) in enumerate(fields)}
-                results.append(record)
+            if len(data) != record_size:
+                continue
+            unpacked = record_struct.unpack(data)
+            record = {
+                field: unpacked[i].decode('utf-8').rstrip('\x00').strip()
+                for i, (field, _) in enumerate(fields)
+            }
+            results.append(record)
     return results
 
 class BuscaPorLogradouro(APIView):
@@ -41,7 +45,10 @@ class BuscaPorLogradouro(APIView):
     def get(self, request):
         logradouro = request.GET.get('logradouro_nome')
         if not logradouro:
-            return Response({'error': 'Parâmetro logradouro_nome é obrigatório.'}, status=400)
+            return Response(
+                {'error': 'Parâmetro logradouro_nome é obrigatório.'}, 
+                status=400
+            )
         logradouro = logradouro.strip().upper()
         index = BPlusTree(index_file=os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_logradouro.idx'))
         offsets = index.search(logradouro)
@@ -55,10 +62,14 @@ class BuscaPorLogradouro(APIView):
 
         results = read_records_by_offsets(paged_offsets)
 
+        # Normaliza campos e converte latitude/longitude
         for rec in results:
             for k, v in rec.items():
-                if isinstance(v, str):
-                    rec[k] = v.rstrip('\x00').strip()
+                if k in ('latitude', 'longitude'):
+                    clean = v  # já sem '\x00', pois read_records_by_offsets faz rstrip
+                    rec[k] = float(clean) if clean else None
+                else:
+                    rec[k] = v
 
         return Response({
             'page': page,
