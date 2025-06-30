@@ -37,3 +37,11 @@
    npm run dev    # ou yarn dev / pnpm dev
    ```
 3. Acesse `http://localhost:5173` e faça buscas por logradouro ou implantação.
+   
+
+## Acessando o painel de performance (Silk)
+   Com o Django rodando em `http://localhost:8000/`, abra no navegador:
+   ```
+   http://localhost:8000/silk/
+   ```
+   O Silk exibirá estatísticas de cada request, tempos gastos em views, operações de B+Tree, I/O em disco e muito mais, permitindo identificar gargalos de forma visual.
