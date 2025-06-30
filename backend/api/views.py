@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -46,6 +47,7 @@ class BuscaPorLogradouro(APIView):
     @silk_profile(name='view_get_busca_logradouro')
     def get(self, request):
         logradouro = request.GET.get('logradouro_nome')
+        ordering   = request.GET.get('ordering','asc').lower()
         if not logradouro:
             return Response(
                 {'error': 'Parâmetro logradouro_nome é obrigatório.'}, 
@@ -64,6 +66,12 @@ class BuscaPorLogradouro(APIView):
         paged_offsets = offsets[start:end]
 
         results = read_records_by_offsets(paged_offsets)
+
+        # Converte 'implantacao' em date e ordena
+        results.sort(
+            key=lambda r: datetime.fromisoformat(r['implantacao']),
+            reverse=(ordering=='desc')
+        )
 
         # Normaliza campos e converte latitude/longitude
         for rec in results:

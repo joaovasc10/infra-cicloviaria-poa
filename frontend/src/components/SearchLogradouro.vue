@@ -34,6 +34,13 @@
         {{ page }} / {{ lastPage }}
         <button :disabled="page === lastPage" @click="changePage(page + 1)">›</button>
       </div>
+      <div class="selector">
+      <label>Ordem:</label>
+      <select v-model="ordering" @change="search">
+        <option value="asc">Ascendente</option>
+        <option value="desc">Descendente</option>
+      </select>
+      </div>
     </div>
 
     <!-- Depois o mapa sempre presente -->
@@ -55,6 +62,7 @@ export default {
       page: 1,
       pagesize: 10,
       map: null,
+      ordering: 'asc',
     }
   },
   watch: {
@@ -125,7 +133,8 @@ export default {
         params: {
           logradouro_nome: this.q,
           page: this.page,
-          pagesize: this.pagesize
+          pagesize: this.pagesize,
+          ordering: this.ordering
         }
       })
       this.results = resp.data.results
