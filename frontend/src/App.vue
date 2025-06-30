@@ -33,10 +33,10 @@ export default {
 
 <style>
 :root {
-  --blue-pastel: #46685b;
+  --blue-pastel: #688a7c; /* title */
   --orange-pastel: #FFD8A8;
-  --neutral: #e1e3ac;
-  --text: #333;
+  --neutral: #becec4; /* background */
+  --text: #7f8c8d;
 }
 
 body {
