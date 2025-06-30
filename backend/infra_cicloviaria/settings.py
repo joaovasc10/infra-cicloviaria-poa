@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'silk',
 ]
 
 MIDDLEWARE = [
@@ -28,7 +29,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'silk.middleware.SilkyMiddleware',
 ]
+SILKY_PYTHON_PROFILER = True
+SILKY_AUTHENTICATION = False
+SILKY_AUTHORISATION  = False
 
 ROOT_URLCONF = 'infra_cicloviaria.urls'
 

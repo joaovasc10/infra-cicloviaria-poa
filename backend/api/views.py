@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from .btree import BPlusTree
 import struct
 from django.conf import settings
+from silk.profiling.profiler import silk_profile
 
 # Definição dos campos e tamanhos, igual ao usado nos scripts de geração
 fields = [
@@ -42,6 +43,7 @@ class BuscaPorLogradouro(APIView):
     Endpoint para buscar registros pelo nome do logradouro.
     Exemplo de uso: GET /api/busca-logradouro/?logradouro_nome=R MARIANTE
     """
+    @silk_profile(name='view_get_busca_logradouro')
     def get(self, request):
         logradouro = request.GET.get('logradouro_nome')
         if not logradouro:
@@ -50,8 +52,9 @@ class BuscaPorLogradouro(APIView):
                 status=400
             )
         logradouro = logradouro.strip().upper()
-        index = BPlusTree(index_file=os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_logradouro.idx'))
-        offsets = index.search(logradouro)
+        with silk_profile(name='btree_search'):
+            index = BPlusTree(index_file=os.path.join(settings.BASE_DIR, '..', 'data', 'bin', 'infra_cicloviaria_logradouro.idx'))
+            offsets = index.search(logradouro)
         
         # Paginação
         page = int(request.GET.get('page', 1))
@@ -83,6 +86,7 @@ class BuscaPorImplantacao(APIView):
     Endpoint para buscar registros pela data de implantação.
     Exemplo de uso: GET /api/busca-implantacao/?implantacao=2018-06-21
     """
+    @silk_profile(name='view_get_busca_implantacao')
     def get(self, request):
         implantacao = request.GET.get('implantacao')
         if not implantacao:
