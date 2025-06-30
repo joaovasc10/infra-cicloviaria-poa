@@ -13,7 +13,7 @@ class BPlusTreeNode:
 
 class BPlusTree:
     """
-    Implementação básica de uma árvore B+ para indexação de chaves e offsets.
+    Implementação de uma árvore B+ para indexação de chaves e offsets.
     """
     def __init__(self, order=8, index_file=None):
         self.root = BPlusTreeNode(leaf=True)
