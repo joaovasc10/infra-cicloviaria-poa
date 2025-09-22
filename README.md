@@ -8,40 +8,43 @@
 
 ## Pipeline de geração de dados
 
-1. Na raiz do projeto, converta o CSV filtrado em um arquivo binário:  
-   ```
-   python scripts/csv_to_bin.py
-   ```
-    Isso lê `data/processed/filtrado_infra_cicloviaria.csv` e gera
-    `data/bin/infra_cicloviaria.bin`.
-  
-2. Em seguida, crie (ou atualize) os índices B+ a partir do binário:
+Com o ambiente Python configurado e as dependências instaladas, o único passo necessário é importar os dados do CSV para o banco de dados SQLite.
+
+1.  **Instale as dependências Python:**
+    ```bash
+    pip install django djangorestframework django-silk
     ```
+
+2.  **Importe os dados:**
+    Execute o comando de gerenciamento a partir da pasta `backend`:
+    ```bash
     cd backend
-    python manage.py parse_infra
+    python manage.py import_csv
     ```
-    Isso gera em data/bin/:
-    - `infra_cicloviaria_logradouro.idx`
-    - `infra_cicloviaria_implantacao.idx`
+    Isso irá popular o banco de dados `db.sqlite3` com os dados de `data/processed/filtrado_infra_cicloviaria.csv`. O comando pode ser executado novamente para recarregar os dados.
+
 ## Executando a aplicação
 
-1. Inicie o backend Django:
-    ```
+1.  **Crie e popule o banco de dados:**
+    Siga as instruções na seção "Pipeline de geração de dados" primeiro.
+
+2.  **Inicie o backend Django:**
+    ```bash
     cd backend
     python manage.py runserver
     ```
-2. Inicie o frontend Vue (em outra aba do terminal):
-   ```
-   cd frontend
-   npm install    # ou yarn/pnpm install
-   npm run dev    # ou yarn dev / pnpm dev
-   ```
-3. Acesse `http://localhost:5173` e faça buscas por logradouro ou implantação.
-   
+
+3.  **Inicie o frontend Vue (em outra aba do terminal):**
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
+4.  Acesse `http://localhost:5173` e faça buscas por logradouro ou implantação.
 
 ## Acessando o painel de performance (Silk)
    Com o Django rodando em `http://localhost:8000/`, abra no navegador:
    ```
    http://localhost:8000/silk/
    ```
-   O Silk exibirá estatísticas de cada request, tempos gastos em views, operações de B+Tree, I/O em disco e muito mais, permitindo identificar gargalos de forma visual.
+   O Silk exibirá estatísticas de cada request, tempos de consulta no banco de dados, e muito mais, permitindo identificar gargalos de forma visual.
